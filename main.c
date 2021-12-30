@@ -105,7 +105,6 @@ void *camion(void *args) {
                 num_plazas_libres = num_plazas_libres - 2;  //Tenemos dos plazas libres menos
                 printf("ENTRADA: Camion %d aparca en %d-%d. Plazas libre: %d\n", id_camion, plaza_ocupada, plaza_ocupada+1,
                        num_plazas_libres);
-                printf("Camiones esperando: %d\n", camiones_esperando);
                 for (int j = 0; j < num_plazas; j++) {  // Estado actual del parking
                     if (j == 0) {
                         printf("Parking: ");
@@ -146,22 +145,58 @@ int main(int argc, char const *argv[]) {
     int num_camiones=0;
     int num_plantas=0;
     if (argc < 3){
-        printf("Pocos argumentos. Procediendo con 40 coches, 2 camiones, 1 planta y 10 plazas.\n");
-        num_coches = 99;
-        num_camiones = 1;
+        printf("Pocos argumentos. Procediendo con valores por defecto.\n");
+        num_coches = 40;
+        num_camiones = 2;
         num_plazas = 10;
         num_plantas = 1;
+        printf("Plazas: %d\n", num_plazas);
+        printf("Plantas: %d\n", num_plantas);
+        printf("Coches: %d\n", num_coches);
+        printf("Camiones: %d\n", num_camiones);
+    }
+    else if (argc == 3){
+        num_plazas = atoi(argv[1]);
+        num_plantas = atoi(argv[2]);
+        num_coches = 2*num_plazas*num_plantas;
+        num_camiones = 0;
+        printf("Plazas: %d\n", num_plazas);
+        printf("Plantas: %d\n", num_plantas);
+        printf("Coches: %d\n", num_coches);
+        printf("Camiones: %d\n", num_camiones);
     }
     else if (argc == 4){
         num_plazas = atoi(argv[1]);
         num_plantas = atoi(argv[2]);
-        num_coches = 2*num_plazas*num_plantas;
+        num_coches = atoi(argv[3]);
+        num_camiones = 0;
+        printf("Plazas: %d\n", num_plazas);
+        printf("Plantas: %d\n", num_plantas);
+        printf("Coches: %d\n", num_coches);
+        printf("Camiones: %d\n", num_camiones);
     }
     else if(argc == 5){
         num_plazas = atoi(argv[1]);
         num_plantas = atoi(argv[2]);
-        num_coches = 2*num_plazas*num_plantas;
+        num_coches = atoi(argv[3]);
+        num_camiones = atoi(argv[4]);
+        printf("Plazas: %d\n", num_plazas);
+        printf("Plantas: %d\n", num_plantas);
+        printf("Coches: %d\n", num_coches);
+        printf("Camiones: %d\n", num_camiones);
     }
+    else{
+        printf("Demasiados argumentos. Ignorando argumentos extra\n");
+        num_plazas = atoi(argv[1]);
+        num_plantas = atoi(argv[2]);
+        num_coches = atoi(argv[3]);
+        num_camiones = atoi(argv[4]);
+        printf("Plazas: %d\n", num_plazas);
+        printf("Plantas: %d\n", num_plantas);
+        printf("Coches: %d\n", num_coches);
+        printf("Camiones: %d\n", num_camiones);
+    }
+    printf("\n");
     // Si los camiones son 1/4 de los coches, tienen prioridad en el parking;
     prioridad_coches = num_camiones < num_coches / 4 ? 0 : 1;
     // Creamos las plazas

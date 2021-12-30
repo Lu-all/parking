@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <pthread.h>
-#include <semaphore.h>
+#include <string.h>
 
 int num_plazas;
 int prioridad_coches;
@@ -21,11 +21,8 @@ void *coche(void *args) {
         int id_coche = *(int *) args;
         sleep(rand() % 5 + 1);
         pthread_mutex_lock(&mutex); //Entra
-        int plazas_reservadas = 0;
-        if (num_plazas < 2){
-            plazas_reservadas = 0;
-        }
-        else if(num_plazas == 2){
+        int plazas_reservadas;
+        if (num_plazas <= 2){
             plazas_reservadas = 0;
         }
         else if (num_plazas/2 <= camiones_esperando*2){
@@ -143,9 +140,9 @@ void *camion(void *args) {
 }
 
 int main(int argc, char const *argv[]) {
-    int num_coches=0;
-    int num_camiones=0;
-    int num_plantas=0;
+    int num_coches;
+    int num_camiones;
+    int num_plantas;
     if (argc < 3){
         printf("Pocos argumentos. Procediendo con valores por defecto.\n");
         num_coches = 40;
@@ -158,8 +155,25 @@ int main(int argc, char const *argv[]) {
         printf("Camiones: %d\n", num_camiones);
     }
     else if (argc == 3){
-        num_plazas = atoi(argv[1]);
-        num_plantas = atoi(argv[2]);
+        if(strcmp(argv[1], "0")==0){
+            num_plazas = 0;
+        }else{
+            num_plazas = (int) strtol(argv[1], NULL, 10);
+            if(num_plazas < 1){
+                printf("F");
+                fprintf(stderr, "Numero de plazas incorrecto: %s\n", argv[1]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[2], "0")==0){
+            num_plantas = 0;
+        }else{
+            num_plantas = (int) strtol(argv[2], NULL, 10);
+            if(num_plantas < 1){
+                fprintf(stderr, "Numero de plantas incorrecto: %s\n", argv[2]);
+                return 1;
+            }
+        }
         num_coches = 2*num_plazas*num_plantas;
         num_camiones = 0;
         printf("Plazas: %d\n", num_plazas);
@@ -168,8 +182,33 @@ int main(int argc, char const *argv[]) {
         printf("Camiones: %d\n", num_camiones);
     }
     else if (argc == 4){
-        num_plazas = atoi(argv[1]);
-        num_plantas = atoi(argv[2]);
+        if(strcmp(argv[1], "0")==0){
+            num_plazas = 0;
+        }else{
+            num_plazas = (int) strtol(argv[1], NULL, 10);
+            if(num_plazas < 1){
+                fprintf(stderr, "Numero de plazas incorrecto: %s\n", argv[1]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[2], "0")==0){
+            num_plantas = 0;
+        }else{
+            num_plantas = (int) strtol(argv[2], NULL, 10);
+            if(num_plantas < 1){
+                fprintf(stderr, "Numero de plantas incorrecto: %s\n", argv[2]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[3], "0")==0){
+            num_coches = 0;
+        }else{
+            num_coches = (int) strtol(argv[3], NULL, 10);
+            if(num_coches < 1){
+                fprintf(stderr, "Numero de coches incorrecto: %s\n", argv[3]);
+                return 1;
+            }
+        }
         num_coches = atoi(argv[3]);
         num_camiones = 0;
         printf("Plazas: %d\n", num_plazas);
@@ -178,10 +217,42 @@ int main(int argc, char const *argv[]) {
         printf("Camiones: %d\n", num_camiones);
     }
     else if(argc == 5){
-        num_plazas = atoi(argv[1]);
-        num_plantas = atoi(argv[2]);
-        num_coches = atoi(argv[3]);
-        num_camiones = atoi(argv[4]);
+        if(strcmp(argv[1], "0")==0){
+            num_plazas = 0;
+        }else{
+            num_plazas = (int) strtol(argv[1], NULL, 10);
+            if(num_plazas < 1){
+                fprintf(stderr, "Numero de plazas incorrecto: %s\n", argv[1]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[2], "0")==0){
+            num_plantas = 0;
+        }else{
+            num_plantas = (int) strtol(argv[2], NULL, 10);
+            if(num_plantas < 1){
+                fprintf(stderr, "Numero de plantas incorrecto: %s\n", argv[2]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[3], "0")==0){
+            num_coches = 0;
+        }else{
+            num_coches = (int) strtol(argv[3], NULL, 10);
+            if(num_coches < 1){
+                fprintf(stderr, "Numero de coches incorrecto: %s\n", argv[3]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[4], "0")==0){
+            num_camiones = 0;
+        }else{
+            num_camiones = (int) strtol(argv[4], NULL, 10);
+            if(num_camiones < 1){
+                fprintf(stderr, "Numero de camiones incorrecto: %s\n", argv[4]);
+                return 1;
+            }
+        }
         printf("Plazas: %d\n", num_plazas);
         printf("Plantas: %d\n", num_plantas);
         printf("Coches: %d\n", num_coches);
@@ -189,14 +260,54 @@ int main(int argc, char const *argv[]) {
     }
     else{
         printf("Demasiados argumentos. Ignorando argumentos extra\n");
-        num_plazas = atoi(argv[1]);
-        num_plantas = atoi(argv[2]);
-        num_coches = atoi(argv[3]);
-        num_camiones = atoi(argv[4]);
+        if(strcmp(argv[1], "0")==0){
+            num_plazas = 0;
+        }else{
+            num_plazas = (int) strtol(argv[1], NULL, 10);
+            if(num_plazas < 1){
+                fprintf(stderr, "Numero de plazas incorrecto: %s\n", argv[1]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[2], "0")==0){
+            num_plantas = 0;
+        }else{
+            num_plantas = (int) strtol(argv[2], NULL, 10);
+            if(num_plantas < 1){
+                fprintf(stderr, "Numero de plantas incorrecto: %s\n", argv[2]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[3], "0")==0){
+            num_coches = 0;
+        }else{
+            num_coches = (int) strtol(argv[3], NULL, 10);
+            if(num_coches < 1){
+                fprintf(stderr, "Numero de coches incorrecto: %s\n", argv[3]);
+                return 1;
+            }
+        }
+        if(strcmp(argv[4], "0")==0){
+            num_camiones = 0;
+        }else{
+            num_camiones = (int) strtol(argv[4], NULL, 10);
+            if(num_camiones < 1){
+                fprintf(stderr, "Numero de camiones incorrecto: %s\n", argv[4]);
+                return 1;
+            }
+        }
         printf("Plazas: %d\n", num_plazas);
         printf("Plantas: %d\n", num_plantas);
         printf("Coches: %d\n", num_coches);
         printf("Camiones: %d\n", num_camiones);
+    }
+    if(num_plazas<1){
+        fprintf(stderr,"El numero de plazas especificadas es 0. No hay parking.\n");
+        return 1;
+    }
+    if(num_coches == 0 && num_camiones == 0){
+        fprintf(stderr,"No hay ni coches ni camiones.\n");
+        return 1;
     }
     printf("\n");
     // Si los camiones son 1/4 de los coches, tienen prioridad en el parking;

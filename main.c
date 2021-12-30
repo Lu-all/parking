@@ -68,15 +68,17 @@ void *coche(void *args) {
         sleep(rand() % 5 + 1);
         pthread_mutex_lock(&mutex);  // Sale
         num_plazas_libres++;  //Tenemos una plaza libre mas
-        plazas[plaza_ocupada] = 0;  // La plaza que ocupabamos la marcamos como libre
-        printf("SALIDA: Coche %d saliendo. Plazas libre: %d\n", id_coche, num_plazas_libres);
-        for (int j = 0; j < num_plazas; j++) {  // Estado actual del parking
-            if (j == 0) {
-                printf("Parking: ");
-            }
-            printf("[%d] ", plazas[j]);
-            if (j == num_plazas - 1) {
-                printf("\n");
+        if(plaza_ocupada!=-1){
+            plazas[plaza_ocupada] = 0;  // La plaza que ocupabamos la marcamos como libre
+            printf("SALIDA: Coche %d saliendo. Plazas libre: %d\n", id_coche, num_plazas_libres);
+            for (int j = 0; j < num_plazas; j++) {  // Estado actual del parking
+                if (j == 0) {
+                    printf("Parking: ");
+                }
+                printf("[%d] ", plazas[j]);
+                if (j == num_plazas - 1) {
+                    printf("\n");
+                }
             }
         }
         pthread_cond_signal(&plazas_libres_cond);  // Ya no esta lleno el parking

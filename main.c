@@ -6,8 +6,11 @@
 #include <semaphore.h>
 
 int num_plazas;
+int prioridad_coches;
 pthread_mutex_t mutex;
 pthread_cond_t plazas_libres_cond;
+pthread_cond_t camion_esperando;
+int camiones_esperando;
 int num_plazas_libres;
 int *plazas;
 pthread_t *coches;
@@ -18,7 +21,26 @@ void *coche(void *args) {
         int id_coche = *(int *) args;
         sleep(rand() % 5 + 1);
         pthread_mutex_lock(&mutex); //Entra
-        while (num_plazas_libres == 0) {
+        int plazas_reservadas = 0;
+        if (num_plazas < 2){
+            plazas_reservadas = 0;
+        }
+        else if(num_plazas == 2){
+            plazas_reservadas = 0;
+        }
+        else if (num_plazas/2 <= camiones_esperando*2){
+            if(num_plazas/2 <= camiones_esperando){
+                if (num_plazas/4 <= camiones_esperando){
+                    plazas_reservadas = 2;
+                }else{
+                    plazas_reservadas = num_plazas/4;
+                }
+            }else plazas_reservadas = camiones_esperando;
+        } else plazas_reservadas = camiones_esperando*2;
+        while (num_plazas_libres == 0 || (prioridad_coches==0 && (num_plazas<5 || (plazas[num_plazas-1]!=0 || plazas[num_plazas-2]!=0)) && camiones_esperando > 0 && num_plazas_libres< plazas_reservadas)) {
+            if (camiones_esperando > 0){
+                pthread_cond_wait(&camion_esperando, &mutex);  //Si no hay plazas libres
+            }
             pthread_cond_wait(&plazas_libres_cond, &mutex);  //Si no hay plazas libres
         }
         // Buscamos la plaza libre
@@ -28,7 +50,7 @@ void *coche(void *args) {
             if (plazas[i] == 0) {  // Hemos encontrado la plaza
                 plaza_ocupada = i;  // Marcamos la plaza que ocuparemos
                 plazas[i] = id_coche;  // Ocupamos la plaza
-                --num_plazas_libres;  //Tenemos una plaza libre menos
+                num_plazas_libres--;  //Tenemos una plaza libre menos
                 printf("ENTRADA: Coche %d aparca en %d. Plazas libre: %d\n", id_coche, plaza_ocupada,
                        num_plazas_libres);
                 for (int j = 0; j < num_plazas; j++) {  // Estado actual del parking
@@ -67,20 +89,23 @@ void *camion(void *args) {
         int id_camion = *(int *) args;
         sleep(rand() % 5 + 1);
         pthread_mutex_lock(&mutex); //Entra
-        while (num_plazas_libres < 2) {
+        camiones_esperando++;
+        while (num_plazas_libres<2) {
             pthread_cond_wait(&plazas_libres_cond, &mutex);  //Si no entra un camion
         }
         // Buscamos las plazas libre
-        int i = 0;
+        int c = 0;
         int plaza_ocupada = -1;
-        while (i < num_plazas && plaza_ocupada == -1) { //Mientras que no hayamos encontrado la plaza libre
-            if (i != num_plazas -1 && plazas[i] == 0 && plazas[i+1] == 0) {  // Hemos encontrado la plaza
-                plaza_ocupada = i;  // Marcamos la plaza que ocuparemos
-                plazas[i] = id_camion;  // Ocupamos las plazas
-                plazas[i+1] = id_camion;
+        while (c < num_plazas && plaza_ocupada == -1) { //Mientras que no hayamos encontrado la plaza libre
+            if (c != num_plazas - 1 && plazas[c] == 0 && plazas[c + 1] == 0) {  // Hemos encontrado la plaza
+                camiones_esperando--;
+                plaza_ocupada = c;  // Marcamos la plaza que ocuparemos
+                plazas[c] = id_camion;  // Ocupamos las plazas
+                plazas[c + 1] = id_camion;
                 num_plazas_libres = num_plazas_libres - 2;  //Tenemos dos plazas libres menos
-                printf("ENTRADA: Camion %d aparca en %d. Plazas libre: %d\n", id_camion, plaza_ocupada,
+                printf("ENTRADA: Camion %d aparca en %d-%d. Plazas libre: %d\n", id_camion, plaza_ocupada, plaza_ocupada+1,
                        num_plazas_libres);
+                printf("Camiones esperando: %d\n", camiones_esperando);
                 for (int j = 0; j < num_plazas; j++) {  // Estado actual del parking
                     if (j == 0) {
                         printf("Parking: ");
@@ -90,33 +115,55 @@ void *camion(void *args) {
                         printf("\n");
                     }
                 }
-            } else i++;  //Si no hemos encontrado la plaza libre, seguimos buscando
+            } else c++;  //Si no hemos encontrado la plaza libre, seguimos buscando
         }
+        pthread_cond_signal(&camion_esperando);
         pthread_mutex_unlock(&mutex);  // Ya hemos aparcado
         sleep(rand() % 5 + 1);
         pthread_mutex_lock(&mutex);  // Sale
-        num_plazas_libres = num_plazas_libres + 2;  //Tenemos una plaza libre mas
-        plazas[plaza_ocupada] = 0;  // Las plazas que ocupabamos las marcamos como libres
-        plazas[plaza_ocupada + 1] = 0;
-        printf("SALIDA: Camion %d saliendo. Plazas libre: %d\n", id_camion, num_plazas_libres);
-        for (int j = 0; j < num_plazas; j++) {  // Estado actual del parking
-            if (j == 0) {
-                printf("Parking: ");
+        if(plaza_ocupada!=-1){
+            num_plazas_libres = num_plazas_libres + 2;  //Tenemos una plaza libre mas
+            plazas[plaza_ocupada] = 0;  // Las plazas que ocupabamos las marcamos como libres
+            plazas[plaza_ocupada + 1] = 0;
+            printf("SALIDA: Camion %d saliendo de plazas %d-%d. Plazas libre: %d\n", id_camion, plaza_ocupada, plaza_ocupada+1 ,num_plazas_libres);
+            for (int j = 0; j < num_plazas; j++) {  // Estado actual del parking
+                if (j == 0) {
+                    printf("Parking: ");
+                }
+                printf("[%d] ", plazas[j]);
+                if (j == num_plazas - 1) {
+                    printf("\n");
+                }
             }
-            printf("[%d] ", plazas[j]);
-            if (j == num_plazas - 1) {
-                printf("\n");
-            }
-        }
+        }else camiones_esperando--;
         pthread_cond_signal(&plazas_libres_cond);  // Ya no esta lleno el parking
         pthread_mutex_unlock(&mutex);  // Ya hemos salido
     }
 }
 
 int main(int argc, char const *argv[]) {
-    int num_coches = 10;
-    int num_camiones = 2;
-    num_plazas = 7;
+    int num_coches=0;
+    int num_camiones=0;
+    int num_plantas=0;
+    if (argc < 3){
+        printf("Pocos argumentos. Procediendo con 40 coches, 2 camiones, 1 planta y 10 plazas.\n");
+        num_coches = 99;
+        num_camiones = 1;
+        num_plazas = 10;
+        num_plantas = 1;
+    }
+    else if (argc == 4){
+        num_plazas = atoi(argv[1]);
+        num_plantas = atoi(argv[2]);
+        num_coches = 2*num_plazas*num_plantas;
+    }
+    else if(argc == 5){
+        num_plazas = atoi(argv[1]);
+        num_plantas = atoi(argv[2]);
+        num_coches = 2*num_plazas*num_plantas;
+    }
+    // Si los camiones son 1/4 de los coches, tienen prioridad en el parking;
+    prioridad_coches = num_camiones < num_coches / 4 ? 0 : 1;
     // Creamos las plazas
     plazas = (int *) malloc(sizeof(int) * num_plazas);
     // Creamos los coches
@@ -137,6 +184,7 @@ int main(int argc, char const *argv[]) {
     num_plazas_libres = num_plazas;
     pthread_mutex_init(&mutex, NULL);
     pthread_cond_init(&plazas_libres_cond, NULL);
+    pthread_cond_init(&camion_esperando, NULL);
     for (int i = 0; i < num_plazas; i++) {
         plazas[i] = 0;
     }
@@ -165,5 +213,6 @@ int main(int argc, char const *argv[]) {
     // Destruimos mutex y condiciones
     pthread_mutex_destroy(&mutex);
     pthread_cond_destroy(&plazas_libres_cond);
+    pthread_cond_destroy(&camion_esperando);
     return 0;
 }

@@ -213,6 +213,7 @@ void *camion(void *args) {
 int main(int argc, char const *argv[]) {
     int num_coches;
     int num_camiones;
+    int id_camion_base = 0;
     if (argc < 3) {
         printf("Pocos argumentos. Procediendo con valores por defecto.\n");
         num_coches = 40;
@@ -383,6 +384,17 @@ int main(int argc, char const *argv[]) {
     }
     printf("\n");
 
+    //Calculamos en que numero empiezan los id de los camiones
+    int num_coches_copia = num_coches;
+    while (num_coches_copia>0){
+        num_coches_copia = num_coches_copia/10;
+        if(id_camion_base==0){
+            id_camion_base=10;
+        }else{
+            id_camion_base= id_camion_base*10;
+        }
+    }
+
     // Si los camiones son 1/4 de los coches, tienen prioridad los camiones en el parking (0 = !prioridad coches)
     prioridad_coches = num_camiones < num_coches / 4 ? 0 : 1;
 
@@ -401,7 +413,7 @@ int main(int argc, char const *argv[]) {
     camiones = (pthread_t *) malloc(sizeof(pthread_t) * num_camiones);
     int id_camiones[num_camiones];
     for (int k = 0; k < num_camiones; k++) {
-        id_camiones[k] = 100 + k + 1;
+        id_camiones[k] = id_camion_base + k + 1;
     }
 
     // Iniciamos mutex, condiciones y parking

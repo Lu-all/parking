@@ -126,7 +126,7 @@ void *camion(void *args) {
     while (1) {
         int id_camion = *(int *) args; // Recuperamos la matricula del camion
 
-        sleep(rand() % 5 + 1);  // Esta fuera un timepo aleatorio
+        sleep(rand() % 5 + 1);  // Esta fuera un tiempo aleatorio
 
         pthread_mutex_lock(&mutex); //Entra
 

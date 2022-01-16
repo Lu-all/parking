@@ -47,9 +47,7 @@ void *coche(void *args) {
 
         // Vemos si tenemos plazas libres y no hay un camion con prioridad
         while (num_plazas_libres == 0 ||
-               (prioridad_coches == 0 && (num_total_plazas < 5 || (plazas[num_total_plazas - 1] != 0 ||
-                                                                   plazas[num_total_plazas - 2] != 0)) &&
-                camiones_esperando > 0 && num_plazas_libres < plazas_reservadas)) {
+               (prioridad_coches == 0 && camiones_esperando > 0 && num_plazas_libres < plazas_reservadas)) {
             if (camiones_esperando > 0) {
                 pthread_cond_wait(&camion_esperando, &mutex);  //Si hay un camion esperando
             }
@@ -230,7 +228,6 @@ int main(int argc, char const *argv[]) {
         } else {
             num_plazas = (int) strtol(argv[1], NULL, 10);
             if (num_plazas < 1) {
-                printf("F");
                 fprintf(stderr, "Numero de plazas incorrecto: %s\n", argv[1]);
                 return 1;
             }
@@ -278,7 +275,6 @@ int main(int argc, char const *argv[]) {
                 return 1;
             }
         }
-        num_coches = atoi(argv[3]);
         num_camiones = 0;
         printf("Plazas: %d\n", num_plazas);
         printf("Plantas: %d\n", num_plantas);
